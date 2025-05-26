@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spotify Dashboard</title>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #000; /* black background */
+    color: #fff; /* white text */
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1, h2, h3 {
+    color: #1DB954; /* Spotify green */
+  }
+
+  img {
+    width: 300px;
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+
+  .lyrics {
+    max-width: 600px;
+    margin: 20px auto;
+    white-space: pre-wrap;
+    background-color: #121212;
+    padding: 15px;
+    border-radius: 8px;
+    color: #ccc;
+  }
+
+  .gestures {
+    margin-top: 30px;
+  }
+
+  #gesture-log {
+    list-style-type: none; /* remove bullets */
+    padding: 0;
+  }
+
+  #gesture-log li {
+    margin: 5px 0;
+    color: #1DB954;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+  <h1>🎵 Spotify Gesture Dashboard</h1>
+  <div id="track-info">
+    <h2 id="song-name">Loading...</h2>
+    <h3 id="artist">Please wait</h3>
+    <img id="album-cover" src="" />
+    <div class="lyrics" id="lyrics"></div>
+  </div>
+
+  <div class="gestures">
+    <h3>Gesture History</h3>
+    <ul id="gesture-log"></ul>
+  </div>
+
+  <script>
+    async function fetchTrack() {
+      const res = await fetch('/current_track');
+      const data = await res.json();
+      if (data.error) return;
+
+      document.getElementById('song-name').innerText = data.name;
+      document.getElementById('artist').innerText = "By " + data.artist;
+      document.getElementById('album-cover').src = data.album_cover;
+      document.getElementById('lyrics').innerText = data.lyrics || '';
+    }
+
+    async function fetchGestures() {
+    try {
+        const res = await fetch('/gestures');
+        const data = await res.json();
+        console.log("Fetched gestures:", data);  // DEBUG print
+
+        const log = document.getElementById('gesture-log');
+        log.innerHTML = '';
+        data.reverse().forEach(g => {
+        const li = document.createElement('li');
+        li.innerText = g;
+        log.appendChild(li);
+        });
+    } catch (err) {
+        console.error("Failed to fetch gestures:", err);  // DEBUG error
+    }
+    }
+
+    setInterval(fetchTrack, 5000); // update every 5s
+    setInterval(fetchGestures, 2000);
+    fetchTrack();
+    fetchGestures();
+  </script>
+</body>
+</html>
