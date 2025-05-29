@@ -6,14 +6,14 @@
   body {
     font-family: Arial, sans-serif;
     text-align: center;
-    background: #000; /* black background */
-    color: #fff; /* white text */
+    background: #1e1d1d;
+    color: #fff;
     margin: 0;
     padding: 20px;
   }
 
   h1, h2, h3 {
-    color: #1DB954; /* Spotify green */
+    color: #1DB954;
   }
 
   img {
@@ -37,23 +37,31 @@
   }
 
   #gesture-log {
-    list-style-type: none; /* remove bullets */
+    list-style-type: none;
     padding: 0;
   }
 
   #gesture-log li {
     margin: 5px 0;
-    color: #1DB954;
+    color: #eaeaea;
     font-weight: bold;
   }
 </style>
 </head>
 <body>
-  <h1>🎵 Spotify Gesture Dashboard</h1>
+  <h1> 🎵Spotify Gesture Dashboard</h1>
   <div id="track-info">
     <h2 id="song-name">Loading...</h2>
     <h3 id="artist">Please wait</h3>
     <img id="album-cover" src="" />
+
+    <div style="margin: 20px 0;">
+      <button onclick="sendGesture('left')">⏮️ Previous</button>
+      <button onclick="sendGesture('start')">▶️ Start</button>
+      <button onclick="sendGesture('stop')">⏸️ Stop</button>
+      <button onclick="sendGesture('right')">⏭️ Next</button>
+    </div>
+
     <div class="lyrics" id="lyrics"></div>
   </div>
 
@@ -62,7 +70,26 @@
     <ul id="gesture-log"></ul>
   </div>
 
+  <div style="margin-top: 40px;">
+    <h3>🎵 Local MP3 Playback</h3>
+    <select id="local-tracks"></select>
+    <button onclick="sendPlayRequest()">▶️ Play on Speaker</button>
+  </div>
+
   <script>
+    async function sendGesture(gesture) {
+      try {
+        await fetch('/gesture_control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gesture })
+        });
+        console.log(`Sent gesture: ${gesture}`);
+      } catch (err) {
+        console.error('Error sending gesture:', err);
+      }
+    }
+
     async function fetchTrack() {
       const res = await fetch('/current_track');
       const data = await res.json();
@@ -75,27 +102,53 @@
     }
 
     async function fetchGestures() {
-    try {
+      try {
         const res = await fetch('/gestures');
         const data = await res.json();
-        console.log("Fetched gestures:", data);  // DEBUG print
+        console.log("Fetched gestures:", data);
 
         const log = document.getElementById('gesture-log');
         log.innerHTML = '';
         data.reverse().forEach(g => {
-        const li = document.createElement('li');
-        li.innerText = g;
-        log.appendChild(li);
+          const li = document.createElement('li');
+          li.innerText = g;
+          log.appendChild(li);
         });
-    } catch (err) {
-        console.error("Failed to fetch gestures:", err);  // DEBUG error
-    }
+      } catch (err) {
+        console.error("Failed to fetch gestures:", err);
+      }
     }
 
-    setInterval(fetchTrack, 5000); // update every 5s
+    async function fetchLocalTracks() {
+      const res = await fetch('/local_tracks');
+      const tracks = await res.json();
+      const select = document.getElementById('local-tracks');
+      select.innerHTML = '';
+      tracks.forEach(track => {
+        const option = document.createElement('option');
+        option.value = track;
+        option.textContent = track;
+        select.appendChild(option);
+      });
+    }
+
+    async function sendPlayRequest() {
+      const selected = document.getElementById('local-tracks').value;
+      const res = await fetch('/play_local_track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: selected })
+      });
+      const result = await res.json();
+      console.log(result);
+    }
+
+    setInterval(fetchTrack, 5000);
     setInterval(fetchGestures, 2000);
     fetchTrack();
     fetchGestures();
+    fetchLocalTracks();
   </script>
+
 </body>
 </html>
