@@ -1,0 +1,13 @@
+/ {
+    us0: hc-sr04 {
+        compatible = "hc-sr04";
+        label = "HC-SR04_0";
+        trigger-gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
+        echo-gpios = <&gpioa 4 GPIO_ACTIVE_HIGH>;
+        status = "okay";
+    };
+};
+    
+&us0 {
+    status = "okay";
+};
